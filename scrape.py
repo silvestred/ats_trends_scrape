@@ -117,10 +117,18 @@ def main():
 
     # Prepare statement for inserting rows (bind row_json as JSONB)
     insert_trend_stmt = text("""
-        insert into nba_ats_trends (run_id, scraped_at, team, row_json, row_hash)
-        values (:run_id, :scraped_at, :team, :row_json, :row_hash)
-        on conflict (team, row_hash) do nothing
+        insert into nba_ats_trends
+        (run_id, scraped_at, team, row_json, row_hash)
+        values
+        (:run_id, :scraped_at, :team, :row_json, :row_hash)
+        on conflict (team, scrape_date)
+        do update set
+        run_id     = excluded.run_id,
+        scraped_at = excluded.scraped_at,
+        row_json   = excluded.row_json,
+        row_hash   = excluded.row_hash
     """).bindparams(bindparam("row_json", type_=JSONB))
+
 
     with engine.begin() as conn:
         # Create schema if needed
