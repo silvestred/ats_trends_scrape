@@ -1,4 +1,4 @@
-name: Scrape NBA ATS Trends
+name: Scrape ATS Trends
 
 on:
   workflow_dispatch:

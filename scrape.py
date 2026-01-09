@@ -106,49 +106,49 @@ def infer_team(row: Dict[str, str]) -> str:
     return "UNKNOWN"
 
 
-def ensure_schema(conn) -> None:
-    conn.execute(text("""
-        create table if not exists scrape_runs (
-          run_id      bigserial primary key,
-          source      text not null,
-          league      text not null,
-          url         text not null,
-          scraped_at  timestamptz not null default now()
-        );
-    """))
+# def ensure_schema(conn) -> None:
+#     conn.execute(text("""
+#         create table if not exists scrape_runs (
+#           run_id      bigserial primary key,
+#           source      text not null,
+#           league      text not null,
+#           url         text not null,
+#           scraped_at  timestamptz not null default now()
+#         );
+#     """))
 
-    conn.execute(text("""
-        create table if not exists ats_trends (
-          id          bigserial primary key,
-          run_id      bigint not null references scrape_runs(run_id) on delete cascade,
-          scraped_at  timestamptz not null,
-          scrape_date date generated always as ((scraped_at at time zone 'UTC')::date) stored,
-          league      text not null,
-          team        text not null,
-          row_json    jsonb not null,
-          row_hash    text not null,
-          unique (league, team, scrape_date)
-        );
-    """))
+#     conn.execute(text("""
+#         create table if not exists ats_trends (
+#           id          bigserial primary key,
+#           run_id      bigint not null references scrape_runs(run_id) on delete cascade,
+#           scraped_at  timestamptz not null,
+#           scrape_date date generated always as ((scraped_at at time zone 'UTC')::date) stored,
+#           league      text not null,
+#           team        text not null,
+#           row_json    jsonb not null,
+#           row_hash    text not null,
+#           unique (league, team, scrape_date)
+#         );
+#     """))
 
-    conn.execute(text("""
-        create index if not exists idx_ats_trends_league_team_time
-          on ats_trends (league, team, scraped_at desc);
-    """))
+#     conn.execute(text("""
+#         create index if not exists idx_ats_trends_league_team_time
+#           on ats_trends (league, team, scraped_at desc);
+#     """))
 
-    # Handy flat view for Sheets / REST (casts where reasonable)
-    conn.execute(text("""
-        create or replace view flat_ats_trends_v as
-        select
-          scrape_date,
-          league,
-          team,
-          row_json->>'ATS Record' as ats_record,
-          row_json->>'Cover %' as cover_pct,
-          nullif(row_json->>'MOV','')::numeric as mov,
-          nullif(replace(row_json->>'ATS +/-', '+', ''),'')::numeric as ats_plus_minus
-        from ats_trends;
-    """))
+    # # Handy flat view for Sheets / REST (casts where reasonable)
+    # conn.execute(text("""
+    #     create or replace view flat_ats_trends_v as
+    #     select
+    #       scrape_date,
+    #       league,
+    #       team,
+    #       row_json->>'ATS Record' as ats_record,
+    #       row_json->>'Cover %' as cover_pct,
+    #       nullif(row_json->>'MOV','')::numeric as mov,
+    #       nullif(replace(row_json->>'ATS +/-', '+', ''),'')::numeric as ats_plus_minus
+    #     from ats_trends;
+    # """))
 
 
 def main() -> None:
@@ -187,7 +187,7 @@ def main() -> None:
     total_inserted_or_updated = 0
 
     with engine.begin() as conn:
-        ensure_schema(conn)
+        # ensure_schema(conn)
 
         for league, url in LEAGUE_URLS.items():
             print(f"\n=== {league.upper()} ===")
